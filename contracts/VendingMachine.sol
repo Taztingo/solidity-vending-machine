@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract VendingMachine is Ownable {
     
-    Item[] public items;
+    Item[] items;
     
     struct Item {
         string name;
@@ -32,6 +32,10 @@ contract VendingMachine is Ownable {
     modifier inStock(uint slot) {
         require(items[slot].amount > 0, "Unable to buy item when it is out of stock.");
         _;
+    }
+
+    function countSlots() external view returns (uint) {
+        return items.length;
     }
     
     // Anyone can remove 1 item for cash
