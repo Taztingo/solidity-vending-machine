@@ -44,14 +44,6 @@ contract("VendingMachine", ([owner, buyer]) => {
         assert.ok(error.message.search("Slot is out of range") >= 0, "Expected out of range error to be thrown.");
     }); 
 
-    it("should require the user to pay enough for their bought item", async () => {
-        assert.fail("Not yet implemented");
-    });
-
-    it("should refund the user excess for their bought item", async () => {
-        assert.fail("Not yet implemented");
-    }); 
-
     it("should restock the slot with the correct items", async() => {
         await vendingMachine.restock("Take 5", web3.utils.toWei("0.5", 'Ether'), 10, 0, {from: owner});
         let item = await vendingMachine.examine(0);
@@ -62,14 +54,31 @@ contract("VendingMachine", ([owner, buyer]) => {
     });
 
     it("should allow the user to buy an item in stock", async() => {
-        let item = await vendingMachine.buy(0, {from: buyer, value: web3.utils.toWei("0.5", "Ether")});
-        assert.equal(item, 1);
+        let balance = await web3.eth.getBalance(vendingMachine.address);
+        await vendingMachine.buy(0, {from: buyer, value: web3.utils.toWei("0.6", "Ether")});
+        let balanceAfter = await web3.eth.getBalance(vendingMachine.address);
+        let difference = parseFloat(balanceAfter) - parseFloat(balance)
 
         item = await vendingMachine.examine(0);
         assert.equal(item.name, "Take 5");
         assert.equal(item.price, web3.utils.toWei("0.5", 'Ether'));
         assert.equal(item.amount, 9);
 
+        // We probably want to check for an event
+        assert.ok(balanceAfter > balance, "Contract balance should be greater after a purchase");
+        assert.ok(difference === parseFloat(web3.utils.toWei("0.5", "Ether"), "Contract should only take the price of the item in ether"));
+    });
+
+    it("should require the user to pay enough for their bought item", async () => {
+        let error = null;
+        
+        try {
+            await vendingMachine.buy(0, {from: buyer, value: web3.utils.toWei("0.4", "Ether")});
+        } catch(err) {
+            error = err;
+        }
+
+        assert.ok(error.message.search("Must have enough Ether to purchase the item") >= 0, "Expected not enough ether error.");
     });
 
     it("should only allow the owner to restock items", async() => {
@@ -138,7 +147,14 @@ contract("VendingMachine", ([owner, buyer]) => {
     });
 
     it("should withdraw all funds", async() => {
-        assert.fail("Not yet implemented");
+        let beforeBalance = await web3.eth.getBalance(owner);
+        await vendingMachine.withdraw({from: owner});
+        let afterBalance = await web3.eth.getBalance(owner)
+
+        assert.ok(parseInt(afterBalance) > parseInt(beforeBalance), "Expected balance to be higher after withdraw");
+
+        let contractBalance = await web3.eth.getBalance(vendingMachine.address);
+        assert.ok(parseInt(contractBalance) === 0, "Expected balance to be higher after withdraw");
     });
 
     it("should only allow the owner to withdraw funds", async() => {

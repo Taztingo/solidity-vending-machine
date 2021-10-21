@@ -40,19 +40,17 @@ contract VendingMachine is Ownable {
     }
     
     // Anyone can remove 1 item for cash
-    function buy(uint slot) external payable slotExists(slot) inStock(slot) returns (Item memory) {
+    function buy(uint slot) external payable slotExists(slot) inStock(slot) {
         Item storage item = items[slot];
         
-        // Verify enough cash
+        // Verify enough cash and refund remaining
         require(msg.value >= item.price, "Must have enough Ether to purchase the item");
-        
-        // We should be able to refund
+        payable(msg.sender).transfer(msg.value - item.price);
         
         // Subtract an item from inventory
         item.amount--;
-        
-        // Return a copy of the bought item
-        return Item(item.name, item.price, 1);
+
+        // We want to emit
     }
     
     // Anyone can view items
