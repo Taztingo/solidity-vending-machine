@@ -15,6 +15,7 @@ contract VendingMachine is Ownable {
     }
     
     constructor(uint slots) {
+        require(slots > 0, "Slots must be positive");
         for(uint i = 0; i < slots; i++) {
             items.push(Item({
                 name: "",
