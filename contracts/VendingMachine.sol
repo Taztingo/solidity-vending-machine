@@ -7,6 +7,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract VendingMachine is Ownable {
     
     Item[] items;
+    event Buy (address buyer, Item item);
+    event Restock (uint slot, Item item);
+    event Withdraw(uint amount);
+    event Remove(uint slot);
     
     struct Item {
         string name;
@@ -51,6 +55,7 @@ contract VendingMachine is Ownable {
         item.amount--;
 
         // We want to emit
+        emit Buy(msg.sender, item);
     }
     
     // Anyone can view items
@@ -68,16 +73,21 @@ contract VendingMachine is Ownable {
         item.name = name;
         item.price = price;
         item.amount = amount;
+
+        emit Restock(slot, item);
     }
     
     // Owner can remove all items for free
     function remove(uint slot) external onlyOwner slotExists(slot) {
         Item storage item = items[slot];
         item.amount = 0;
+        emit Remove(slot);
     }
     
     // Owner can withdraw cash
     function withdraw() external onlyOwner {
-        payable(owner()).transfer(address(this).balance);
+        uint balance = address(this).balance;
+        payable(owner()).transfer(balance);
+        emit Withdraw(balance);
     }
 }
