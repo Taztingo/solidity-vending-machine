@@ -1,9 +1,16 @@
-// SPDX-License-Identifier: GPL-3.0
+// SPDX-License-Identifier: MIT
 
 pragma solidity >=0.8.0 <0.9.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
+/**
+  * @title VendingMachine
+  * @author Matthew Witkowski
+  * @dev A generic vending machine that can store purchasable items.
+  * Users can purchase items with Ether and they will be given
+  * an item in return.
+  */
 contract VendingMachine is Ownable {
     
     Item[] items;
@@ -18,6 +25,10 @@ contract VendingMachine is Ownable {
         uint amount;
     }
     
+    /**
+     * @dev Builds the smart contract and creates n slots.
+     * There must be at least 1 slot for a valid VendingMachine.
+     */
     constructor(uint slots) {
         require(slots > 0, "Slots must be positive");
         for(uint i = 0; i < slots; i++) {
@@ -29,21 +40,34 @@ contract VendingMachine is Ownable {
         }
     }
     
+    /**
+     * @dev Verifies that the slot number is in bounds.
+     */
     modifier slotExists(uint slot) {
         require(slot < items.length, "Slot is out of range");
         _;
     }
     
+    /**
+     * @dev Verifies that their is at least 1 item in the slot.
+     */
     modifier inStock(uint slot) {
         require(items[slot].amount > 0, "Unable to buy item when it is out of stock.");
         _;
     }
 
+    /**
+     * @dev A simple view to obtain the number of slots in the VendingMachine.
+     * @return The number of slots in the VendingMachine.
+     */
     function countSlots() external view returns (uint) {
         return items.length;
     }
     
-    // Anyone can remove 1 item for cash
+    /**
+     * @dev Purchases an item in the slot.
+     * A Buy event is emitted to track the purchase.
+     */
     function buy(uint slot) external payable slotExists(slot) inStock(slot) {
         Item storage item = items[slot];
         
@@ -58,16 +82,19 @@ contract VendingMachine is Ownable {
         emit Buy(msg.sender, item);
     }
     
-    // Anyone can view items
-    // Handled by automatic getters
-    // We can test the gas on this vs a custom method
-    
-    // Anyone can examine a slot
+    /**
+     * @dev Returns the item information in the slot the user wants to examine.
+     * @return An Item is returned containing item, price, and number in stock.
+     */
     function examine(uint slot) external view slotExists(slot) returns (Item memory) {
         return items[slot];
     }
     
-    // Owner can add 1 or n item
+    /**
+     * @dev Replaces all items in a slot with new items.
+     * The data in the map is overwritten to simplify it.
+     * A Restock event is emitted from this function containing the slot and the item.
+     */
     function restock(string calldata name, uint price, uint amount, uint slot) external onlyOwner slotExists(slot) {
         Item storage item = items[slot];
         item.name = name;
@@ -77,14 +104,20 @@ contract VendingMachine is Ownable {
         emit Restock(slot, item);
     }
     
-    // Owner can remove all items for free
+    /**
+     * @dev Removes all instances of an item in a slot.
+     * A Remove event is emitted with the slot impacted.
+     */
     function remove(uint slot) external onlyOwner slotExists(slot) {
         Item storage item = items[slot];
         item.amount = 0;
         emit Remove(slot);
     }
     
-    // Owner can withdraw cash
+    /**
+     * @dev Moves the VendingMachine's funds into the owner's account.
+     * A Withdraw event is emitted with the balance.
+     */
     function withdraw() external onlyOwner {
         uint balance = address(this).balance;
         payable(owner()).transfer(balance);
