@@ -1,6 +1,5 @@
 import React from 'react';
 import {Row, Col, Card, Button} from 'react-bootstrap';
-import { FaPlus } from 'react-icons/fa';
 import {useState, useEffect} from 'react';
 import {newContextComponents} from "@drizzle/react-components";
 import Web3 from 'web3';
@@ -9,7 +8,6 @@ import '../VendingMachine.css';
 const {AccountData, ContractData, ContractForm } = newContextComponents;
 
 const VendingMachine = ({columns, drizzle, drizzleState}) => {
-    const [showRestock, setShowRestock] = useState(true);
     const [dataKey, setDataKey] = useState(null);
     const [web3, setWeb3] = useState(null);
 
@@ -17,7 +15,7 @@ const VendingMachine = ({columns, drizzle, drizzleState}) => {
         // Initialize web3
         let web = new Web3(Web3.currentProvider);
         setWeb3(web);
-    }, [web3])
+    }, [])
 
     useEffect(() => {
         // Declare this call to be cached and synchronized
@@ -57,23 +55,19 @@ const VendingMachine = ({columns, drizzle, drizzleState}) => {
                     </Row>)
                 }
             )}
-            <Row>
-                <Col md={{ span: 2, offset: 5 }}>
-                    <Button variant="success" onClick={() => setShowRestock(!showRestock)}><FaPlus/>{showRestock ? "Hide Restock" : "Show Restock"}</Button>
-                </Col>
-            </Row>
 
-            {showRestock &&
-                <Row>
-                    <ContractForm
+            
+            <Row>
+                <Col>
+                    <ContractForm className="text-center"
                     drizzle={drizzle}
                     contract="VendingMachine"
                     method="restock"
                     labels={["Name", "Description", "Price", "Amount", "Slot"]}
                     sendArgs={{gas: 200000}}
                     />
-                </Row>
-            }
+                </Col>
+            </Row>
         </div>
     )
 }
