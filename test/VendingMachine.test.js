@@ -7,9 +7,14 @@ contract("VendingMachine", ([owner, buyer]) => {
         vendingMachine = await VendingMachine.new(5);
     });
 
-    it("should deploy with the correct number of item slots", async () => {
+    it("should count the correct number of item slots", async () => {
         const items = await vendingMachine.countSlots();
         assert.equal(items, 5);
+    })
+
+    it("should deploy with the correct number of item slots", async () => {
+        const items = await vendingMachine.getItems();
+        assert.equal(items.length, 5);
     })
 
     it("should not accept 0 slots for vending machine", async () => {
@@ -45,10 +50,11 @@ contract("VendingMachine", ([owner, buyer]) => {
     }); 
 
     it("should restock the slot with the correct items", async() => {
-        await vendingMachine.restock("Take 5", web3.utils.toWei("0.5", 'Ether'), 10, 0, {from: owner});
+        await vendingMachine.restock("Take 5", "Delicious", web3.utils.toWei("0.5", 'Ether'), 10, 0, {from: owner});
         let item = await vendingMachine.examine(0);
 
         assert.equal(item.name, "Take 5");
+        assert.equal(item.description, "Delicious");
         assert.equal(item.price, web3.utils.toWei("0.5", 'Ether'));
         assert.equal(item.amount, 10);
     });
@@ -61,6 +67,7 @@ contract("VendingMachine", ([owner, buyer]) => {
 
         item = await vendingMachine.examine(0);
         assert.equal(item.name, "Take 5");
+        assert.equal(item.description, "Delicious");
         assert.equal(item.price, web3.utils.toWei("0.5", 'Ether'));
         assert.equal(item.amount, 9);
 
@@ -116,6 +123,7 @@ contract("VendingMachine", ([owner, buyer]) => {
     it("should allow the user to examine a slot.", async () => {
         let item = await vendingMachine.examine(0);
         assert.equal(item.name, "Take 5");
+        assert.equal(item.description, "Delicious");
         assert.equal(item.price, web3.utils.toWei("0.5", 'Ether'));
         assert.equal(item.amount, 9);
     });

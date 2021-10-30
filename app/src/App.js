@@ -10,24 +10,7 @@ const drizzle = new Drizzle(drizzleOptions);
 
 function App() {
   const [isOwner, setOwner] = useState(false);
-  const [items, setItems] = useState([
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13
-  ]);
   const MAX_COLUMNS = 4;
-
-  
 
   return (
     <div className="App">
@@ -45,7 +28,7 @@ function App() {
                     }
 
                     return (
-                      <VendingMachine items={items} columns={MAX_COLUMNS}/>
+                      <VendingMachine columns={MAX_COLUMNS} drizzle={drizzle} drizzleState={drizzleState}/>
                     )
                   }}
                   

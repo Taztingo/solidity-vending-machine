@@ -21,6 +21,7 @@ contract VendingMachine is Ownable {
     
     struct Item {
         string name;
+        string description;
         uint price;
         uint amount;
     }
@@ -34,6 +35,7 @@ contract VendingMachine is Ownable {
         for(uint i = 0; i < slots; i++) {
             items.push(Item({
                 name: "",
+                description: "",
                 price: 0,
                 amount: 0
             }));
@@ -62,6 +64,14 @@ contract VendingMachine is Ownable {
      */
     function countSlots() external view returns (uint) {
         return items.length;
+    }
+
+    /**
+     * @dev A simple view to obtain all the items in the vending machine.
+     * @return All the items in the VendingMachine.
+     */
+    function getItems() external view returns (Item[] memory) {
+        return items;
     }
     
     /**
@@ -95,11 +105,9 @@ contract VendingMachine is Ownable {
      * The data in the map is overwritten to simplify it.
      * A Restock event is emitted from this function containing the slot and the item.
      */
-    function restock(string calldata name, uint price, uint amount, uint slot) external onlyOwner slotExists(slot) {
-        Item storage item = items[slot];
-        item.name = name;
-        item.price = price;
-        item.amount = amount;
+    function restock(string calldata name, string calldata description, uint price, uint amount, uint slot) external onlyOwner slotExists(slot) {
+        Item memory item = Item (name, description, price, amount);
+        items[slot] = item;
 
         emit Restock(slot, item);
     }
