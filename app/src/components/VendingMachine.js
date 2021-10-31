@@ -1,21 +1,12 @@
-import React from 'react';
 import {Row, Col, Card, Button} from 'react-bootstrap';
 import {useState, useEffect} from 'react';
 import {newContextComponents} from "@drizzle/react-components";
-import Web3 from 'web3';
 import '../VendingMachine.css';
 
-const {AccountData, ContractData, ContractForm } = newContextComponents;
+const {ContractForm} = newContextComponents;
 
 const VendingMachine = ({columns, drizzle, drizzleState}) => {
     const [dataKey, setDataKey] = useState(null);
-    const [web3, setWeb3] = useState(null);
-
-    useEffect(() => {
-        // Initialize web3
-        let web = new Web3(Web3.currentProvider);
-        setWeb3(web);
-    }, [])
 
     useEffect(() => {
         // Declare this call to be cached and synchronized
@@ -39,15 +30,15 @@ const VendingMachine = ({columns, drizzle, drizzleState}) => {
                             <Col md={Math.ceil(12/columns)}>
                                 <Card className="text-center">
                                     <Card.Body>
-                                        <Card.Title>{col.name == "" ? "Empty" : col.name}</Card.Title>
-                                        <Card.Subtitle>{web3 && web3.utils.fromWei(col.price, 'ether')} Ether</Card.Subtitle>
+                                        <Card.Title>{col.name === "" ? "Empty" : col.name}</Card.Title>
+                                        <Card.Subtitle>{drizzle.web3.utils.fromWei(col.price, 'ether')} Ether</Card.Subtitle>
                                         <Card.Text>
                                             {col.description}
                                         </Card.Text>
                                         <Card.Text>
                                             In Stock: {col.amount}
                                         </Card.Text>
-                                        <Button variant={col.amount == 0 ? "primary" : "primary"} disabled={col.amount == 0}>Buy</Button>
+                                        <Button variant={col.amount === 0 ? "primary" : "primary"} disabled={col.amount === 0}>Buy</Button>
                                     </Card.Body>
                                 </Card>
                             </Col>);

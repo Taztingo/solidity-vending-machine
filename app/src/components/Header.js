@@ -1,28 +1,13 @@
-import React from 'react'
-import {useState} from 'react'
-import {Navbar, Container, Nav, Form, Button, FormControl, Input} from 'react-bootstrap'
+import {Navbar, Container} from 'react-bootstrap';
 
-const Header = ({isOwner}) => {
-    const [balance, setBalance] = useState(0.00);
-
-    console.log(isOwner);
-
+const Header = ({drizzle, drizzleState}) => {
     return (
         <Navbar bg="primary" variant="dark">
             <Container>
                 <Navbar.Brand href="#home">Vending Machine</Navbar.Brand>
-
-                {isOwner 
-                    ? <div>Ether blah: {balance}</div>
-                    : <Form className="d-flex">
-                        <FormControl type="text" placeholder="Username" className="me-2" aria-label="Username"/>
-                        <FormControl type="password" placeholder="Password" className="me-2" aria-label="Password"/>
-                        <Button variant="dark">Login</Button>
-                    </Form>
-                }
+                <div>Balance: {drizzle.web3.utils.fromWei(drizzleState.accountBalances[drizzleState.accounts[0]], 'ether')} Ether</div>
             </Container>
-
-            
+        />
         </Navbar>
     )
 }
