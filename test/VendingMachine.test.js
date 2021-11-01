@@ -1,4 +1,5 @@
 const VendingMachine = artifacts.require("VendingMachine");
+const truffleAssert = require('truffle-assertions');
 
 contract("VendingMachine", ([owner, buyer]) => {
     let vendingMachine;
@@ -50,18 +51,26 @@ contract("VendingMachine", ([owner, buyer]) => {
     }); 
 
     it("should restock the slot with the correct items", async() => {
-        await vendingMachine.restock("Take 5", "Delicious", web3.utils.toWei("0.5", 'Ether'), 10, 0, {from: owner});
+        let tx = await vendingMachine.restock("Take 5", "Delicious", web3.utils.toWei("0.5", 'Ether'), 10, 0, {from: owner});
         let item = await vendingMachine.examine(0);
 
         assert.equal(item.name, "Take 5");
         assert.equal(item.description, "Delicious");
         assert.equal(item.price, web3.utils.toWei("0.5", 'Ether'));
         assert.equal(item.amount, 10);
+
+        truffleAssert.eventEmitted(tx, "Restock", (event) => {
+            return  event.item.name == item.name &&
+                    event.item.description == item.description &&
+                    event.item.price == item.price &&
+                    event.item.amount == 10 &&
+                    event.slot == 0;
+        });
     });
 
     it("should allow the user to buy an item in stock", async() => {
         let balance = await web3.eth.getBalance(vendingMachine.address);
-        await vendingMachine.buy(0, {from: buyer, value: web3.utils.toWei("0.6", "Ether")});
+        let tx = await vendingMachine.buy(0, {from: buyer, value: web3.utils.toWei("0.6", "Ether")});
         let balanceAfter = await web3.eth.getBalance(vendingMachine.address);
         let difference = parseFloat(balanceAfter) - parseFloat(balance)
 
@@ -71,9 +80,17 @@ contract("VendingMachine", ([owner, buyer]) => {
         assert.equal(item.price, web3.utils.toWei("0.5", 'Ether'));
         assert.equal(item.amount, 9);
 
-        // We probably want to check for an event
         assert.ok(balanceAfter > balance, "Contract balance should be greater after a purchase");
         assert.ok(difference === parseFloat(web3.utils.toWei("0.5", "Ether"), "Contract should only take the price of the item in ether"));
+
+        truffleAssert.eventEmitted(tx, "Buy", (event) => {
+            return  event.item.name == item.name &&
+                    event.item.description == item.description &&
+                    event.item.price == item.price &&
+                    event.item.amount == 9;// &&
+                    // Ideally we want to test the address, but having an issue with it
+                    //event.address == buyer;
+        });
     });
 
     it("should require the user to pay enough for their bought item", async () => {
@@ -129,9 +146,13 @@ contract("VendingMachine", ([owner, buyer]) => {
     });
 
     it("should remove all instances of an item from a slot", async() => {
-        await vendingMachine.remove(0, {from: owner});
+        let tx = await vendingMachine.remove(0, {from: owner});
         let item = await vendingMachine.examine(0);
         assert.equal(item.amount, 0);
+
+        truffleAssert.eventEmitted(tx, "Remove", (event) => {
+            return event.slot == 0;
+        });
     });
 
     it("should only allow the owner to remove an item from a slot", async() => {
@@ -155,14 +176,22 @@ contract("VendingMachine", ([owner, buyer]) => {
     });
 
     it("should withdraw all funds", async() => {
-        let beforeBalance = await web3.eth.getBalance(owner);
-        await vendingMachine.withdraw({from: owner});
-        let afterBalance = await web3.eth.getBalance(owner)
+        let initialContractBalance = parseInt(await web3.eth.getBalance(vendingMachine.address));
+        let beforeBalance = parseInt(await web3.eth.getBalance(owner));
+        let tx = await vendingMachine.withdraw({from: owner});
+        let afterBalance = parseInt(await web3.eth.getBalance(owner));
 
-        assert.ok(parseInt(afterBalance) > parseInt(beforeBalance), "Expected balance to be higher after withdraw");
+        assert.ok(afterBalance > beforeBalance, "Expected balance to be higher after withdraw");
 
-        let contractBalance = await web3.eth.getBalance(vendingMachine.address);
-        assert.ok(parseInt(contractBalance) === 0, "Expected balance to be higher after withdraw");
+        let contractBalance = parseInt(await web3.eth.getBalance(vendingMachine.address));
+        assert.ok(contractBalance === 0, "Expected balance to be higher after withdraw");
+
+        
+        truffleAssert.eventEmitted(tx, "Withdraw", (event) => {
+            console.log("Test balance: " + (initialContractBalance));
+            console.log("Contract balance: " + event.amount)
+            return event.amount == initialContractBalance;
+        });
     });
 
     it("should only allow the owner to withdraw funds", async() => {
