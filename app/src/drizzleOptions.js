@@ -5,7 +5,8 @@ const options = {
       block: false,
     },
     polls: {
-      accounts: 1000
+      accounts: 1000,
+      blocks: 3000
     },
     contracts: [VendingMachine],
     events: {

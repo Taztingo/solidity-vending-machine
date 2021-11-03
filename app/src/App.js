@@ -6,8 +6,9 @@ import VendingMachine from './components/VendingMachine';
 import drizzleOptions from "./drizzleOptions";
 import { Drizzle } from "@drizzle/store";
 import { DrizzleContext } from "@drizzle/react-plugin";
+import store from './middleware';
 
-const drizzle = new Drizzle(drizzleOptions);
+const drizzle = new Drizzle(drizzleOptions, store);
 
 function App() {
   const MAX_COLUMNS = 4;
